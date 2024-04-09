@@ -76,7 +76,7 @@ void postorder_tree_delete(rbtree *t, node_t *root){
 void delete_rbtree(rbtree *t) {
   postorder_tree_delete(t, t->root);
   free(t->nil);
-  
+
   free(t);
 }
 
@@ -253,7 +253,7 @@ void rbtree_erase_fixup(rbtree *t, node_t *x){
   //     if(t->color == RBTREE_RED){                                           // case 1 (형제가 빨강)
         
   //     }
-  // }
+  // } 
 }
 
 int inorder_tree_walk(const rbtree *t, node_t *x, int idx, key_t *arr){
