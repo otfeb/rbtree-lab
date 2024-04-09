@@ -3,7 +3,10 @@
 
 void rbtree_transplant(rbtree *t, node_t *first, node_t *second);
 node_t *rbtree_successor(const rbtree *t, node_t *right);
-int rbtree_erase(rbtree *t, node_t *p);
+void rbtree_erase_fixup(rbtree *t, node_t *x);
+void left_rotate(rbtree *t,node_t *x);
+void right_rotate(rbtree *t,node_t *x);
+void rbtree_insert_fixup(rbtree *t,node_t *z);
 
 rbtree *new_rbtree(void) {
   // tree 구조체 동적 할당
@@ -62,8 +65,18 @@ void right_rotate(rbtree *t,node_t *x)
   x->parent = y;
 }
 
+void postorder_tree_delete(rbtree *t, node_t *root){
+  if(root != t->nil){
+    postorder_tree_delete(t, root->right);
+    postorder_tree_delete(t, root->left);
+    free(root);
+  }
+}
+
 void delete_rbtree(rbtree *t) {
-  // TODO: reclaim the tree nodes's memory
+  postorder_tree_delete(t, t->root);
+  free(t->nil);
+  
   free(t);
 }
 
@@ -166,13 +179,19 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
 }
 
 node_t *rbtree_min(const rbtree *t) {
-  // TODO: implement find
-  return t->root;
+  node_t *x = t->root;
+  while(x->left != t->nil){
+    x = x->left;
+  }
+  return x;
 }
 
 node_t *rbtree_max(const rbtree *t) {
-  // TODO: implement find
-  return t->root;
+  node_t *x = t->root;
+  while(x->right != t->nil){
+    x = x->right;
+  }
+  return x;
 }
 
 void rbtree_transplant(rbtree *t, node_t *first, node_t *second){
@@ -198,19 +217,17 @@ int rbtree_erase(rbtree *t, node_t *p) {
   color_t successor_color = successor->color;
   node_t *x;
   if(p->left == t->nil){
-    node_t *x = p->right;
+    x = p->right;
     rbtree_transplant(t, p, p->right);
-    free(p);
   }
   else if(p->right == t->nil){
-    node_t *x = p->left;
+    x = p->left;
     rbtree_transplant(t, p, p->left);
-    free(p);
   }
   else{
     successor = rbtree_successor(t, p->right);
-    color_t successor_color = successor->color;
-    node_t *x = successor->right;
+    successor_color = successor->color;
+    x = successor->right;
     if(successor->parent == p)
       x->parent = successor;
     else{
@@ -222,18 +239,35 @@ int rbtree_erase(rbtree *t, node_t *p) {
     successor->left = p->left;
     successor->left->parent = successor;
     successor->color = p->color;
-    free(p);
   }
+  free(p);
   if(successor_color == RBTREE_BLACK)
-    rbtree_delete_fixup(t, x);
+    rbtree_erase_fixup(t, x);
   return 0;
 }
 
-void rbtree_delete_fixup(const rbtree *t, node_t *x){
+void rbtree_erase_fixup(rbtree *t, node_t *x){
+  // while(x != t->root && x->color == RBTREE_BLACK){                          // 대체자가 루트가 아니면서 대체자의 컬러가 black일 경우
+  //   if(x == x->parent->left)                                                // 대체자 노드가 부모의 왼쪽이면
+  //     node_t *sibling = x->parent->right;                                   // 형제 노드는 부모의 오른쪽
+  //     if(t->color == RBTREE_RED){                                           // case 1 (형제가 빨강)
+        
+  //     }
+  // }
+}
 
+int inorder_tree_walk(const rbtree *t, node_t *x, int idx, key_t *arr){
+  if(x != t->nil){
+    idx = inorder_tree_walk(t, x->left, idx, arr);
+    arr[idx++] = x->key;
+    idx = inorder_tree_walk(t, x->right, idx, arr);
+  }
+  return idx;
 }
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
-  // TODO: implement to_array
+  if(t->root != t->nil)
+    inorder_tree_walk(t, t->root, 0, arr);
+
   return 0;
 }
